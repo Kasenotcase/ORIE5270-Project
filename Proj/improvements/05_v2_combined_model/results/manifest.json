@@ -1,0 +1,53 @@
+{
+  "selected_parameters": {
+    "gamma": 8.0,
+    "alpha_shrink": 0.25,
+    "turnover_cap": 0.1,
+    "stress_multiplier": 1.0
+  },
+  "validation_period": [
+    "2013-01-08",
+    "2018-12-31"
+  ],
+  "test_period": [
+    "2019-01-01",
+    "2024-12-31"
+  ],
+  "no_future_leakage_controls": [
+    "parameters selected only on validation grid",
+    "rebalance decisions use returns through the prior trading date",
+    "test set evaluated after freezing selected parameters"
+  ],
+  "outputs": {
+    "tables": [
+      "results/tables/full_sample_excess_vs_references.csv",
+      "results/tables/full_sample_performance.csv",
+      "results/tables/full_strategy_daily_returns.csv",
+      "results/tables/selected_parameters.csv",
+      "results/tables/test_excess_vs_references.csv",
+      "results/tables/test_excess_wealth_curves.csv",
+      "results/tables/test_performance.csv",
+      "results/tables/test_strategy_daily_returns.csv",
+      "results/tables/v2_daily_weights_full.csv",
+      "results/tables/v2_daily_weights_test.csv",
+      "results/tables/v2_forecast_records_full.csv",
+      "results/tables/v2_full_daily_series.csv",
+      "results/tables/v2_rebalance_records_full.csv",
+      "results/tables/v2_rebalance_records_test.csv",
+      "results/tables/v2_test_daily_series.csv",
+      "results/tables/validation_grid_results.csv",
+      "results/tables/validation_selected_metrics.csv"
+    ],
+    "figures": [
+      "results/figures/full_cumulative_wealth.png",
+      "results/figures/full_drawdowns.png",
+      "results/figures/rolling_1y_active_return_test.png",
+      "results/figures/test_cumulative_wealth.png",
+      "results/figures/test_drawdowns.png",
+      "results/figures/test_excess_wealth_curves.png",
+      "results/figures/v2_monthly_weights.png",
+      "results/figures/v2_turnover_and_costs.png",
+      "results/figures/validation_top_grid.png"
+    ]
+  }
+}

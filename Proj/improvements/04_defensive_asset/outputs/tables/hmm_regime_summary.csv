@@ -1,0 +1,14 @@
+metric,value
+rebalance_observations,613.0
+hmm_mpc_successes,613.0
+fallbacks,0.0
+avg_prob_calm,0.5068161459380358
+avg_prob_transition,0.3123739735174509
+avg_prob_stress,0.1808098805445375
+max_prob_stress,1.0
+stress_prob_gt_50pct_count,112.0
+avg_next_cost_multiplier,1.5159755268855837
+max_next_cost_multiplier,3.0
+dominant_calm_count,310.0
+dominant_transition_count,191.0
+dominant_stress_count,112.0

@@ -1,0 +1,15 @@
+check,value
+asset_count,10
+defensive_asset,SHY
+raw_price_start,2010-04-08
+raw_price_end,2024-12-31
+return_start,2010-04-08
+return_end,2024-12-31
+return_observations,3709
+adj_close_missing_cells,0
+close_missing_cells,0
+volume_missing_cells,0
+macro_missing_after_alignment,0
+feature_observations,3709
+rolling_cov_condition_median,238.08155137959844
+rolling_cov_condition_max,483.27366290406036

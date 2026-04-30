@@ -1,0 +1,131 @@
+{
+  "model": "V3_Rolling_Regime_MPC",
+  "period": [
+    "2013-01-08",
+    "2024-12-31"
+  ],
+  "test_slice": [
+    "2019-01-01",
+    "2024-12-31"
+  ],
+  "candidate_count": 12,
+  "selection_window": 756,
+  "min_selection_observations": 252,
+  "candidates": [
+    {
+      "gamma": 5.0,
+      "base_alpha": 0.25,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 5.0,
+      "base_alpha": 0.25,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 5.0,
+      "base_alpha": 0.75,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 5.0,
+      "base_alpha": 0.75,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 5.0,
+      "base_alpha": 1.0,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 5.0,
+      "base_alpha": 1.0,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 0.25,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 0.25,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 0.75,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 0.75,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 1.0,
+      "turnover_cap": 0.1,
+      "stress_multiplier": 1.0
+    },
+    {
+      "gamma": 8.0,
+      "base_alpha": 1.0,
+      "turnover_cap": 0.25,
+      "stress_multiplier": 1.0
+    }
+  ],
+  "no_future_leakage_controls": [
+    "candidate returns are generated sequentially",
+    "selection at each rebalance uses candidate returns through the previous trading day",
+    "portfolio optimization uses returns through the decision date and trades on the next trading day"
+  ],
+  "outputs": {
+    "tables": [
+      "results/tables/average_weights_by_regime.csv",
+      "results/tables/candidate_daily_costs.csv",
+      "results/tables/candidate_daily_returns.csv",
+      "results/tables/candidate_daily_turnover.csv",
+      "results/tables/candidate_performance_full.csv",
+      "results/tables/candidate_rebalance_records.csv",
+      "results/tables/full_excess_wealth_curves.csv",
+      "results/tables/full_sample_excess_vs_references.csv",
+      "results/tables/full_sample_performance.csv",
+      "results/tables/full_strategy_daily_returns.csv",
+      "results/tables/regime_to_params_summary.csv",
+      "results/tables/selected_params_over_time.csv",
+      "results/tables/selection_summary.csv",
+      "results/tables/test_excess_vs_references.csv",
+      "results/tables/test_excess_wealth_curves.csv",
+      "results/tables/test_performance.csv",
+      "results/tables/test_strategy_daily_returns.csv",
+      "results/tables/v3_daily_series_full.csv",
+      "results/tables/v3_daily_weights_full.csv",
+      "results/tables/v3_forecast_records.csv",
+      "results/tables/yearly_active_returns.csv"
+    ],
+    "figures": [
+      "results/figures/full_cumulative_wealth.png",
+      "results/figures/full_drawdowns.png",
+      "results/figures/full_excess_wealth_curves.png",
+      "results/figures/rolling_1y_active_return_full.png",
+      "results/figures/test_cumulative_wealth.png",
+      "results/figures/test_drawdowns.png",
+      "results/figures/test_excess_wealth_curves.png",
+      "results/figures/v3_alpha_strength.png",
+      "results/figures/v3_monthly_weights.png",
+      "results/figures/v3_selection_counts.png",
+      "results/figures/v3_yearly_active_returns.png"
+    ]
+  }
+}

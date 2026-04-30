@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regime-Aware MPC Portfolio Optimization | Progress Brief</title>
+  <script>
+    window.MathJax = {
+      tex: {inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']]},
+      svg: {fontCache: 'global'}
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --ink: #202124;
+      --muted: #5f6662;
+      --line: #d9dfdc;
+      --panel: #ffffff;
+      --soft: #f5f7f6;
+      --accent: #0f7b6c;
+      --accent-dark: #0a4f46;
+      --warn: #a15c00;
+      --bad: #a33a2b;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--soft);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    a { color: var(--accent-dark); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0;
+      color: var(--accent-dark);
+      white-space: nowrap;
+    }
+
+    nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      padding: 6px 9px;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    nav a:hover {
+      background: #e9f2ef;
+      color: var(--accent-dark);
+      text-decoration: none;
+    }
+
+    main { width: 100%; }
+
+    section {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      padding: 72px 28px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    section:nth-child(even) { background: var(--soft); }
+
+    .wrap {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent-dark);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    h1 {
+      max-width: 1040px;
+      font-size: clamp(38px, 6vw, 74px);
+      font-weight: 820;
+    }
+
+    h2 {
+      font-size: clamp(30px, 4vw, 52px);
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: 19px;
+      font-weight: 780;
+    }
+
+    .lead {
+      max-width: 850px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 23px);
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .grid > * {
+      min-width: 0;
+    }
+
+    .two { grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 14px 28px rgba(32,33,36,0.06);
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .plain {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border: 1px solid #b9d7cf;
+      border-radius: 6px;
+      background: #eef7f4;
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 36px;
+    }
+
+    .step {
+      min-height: 94px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 760;
+      font-size: 14px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 7px;
+      font-size: clamp(22px, 3.5vw, 36px);
+      line-height: 1;
+      color: var(--accent-dark);
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    ul {
+      margin: 18px 0 0;
+      padding-left: 21px;
+    }
+
+    li { margin: 8px 0; }
+
+    .short-list li {
+      font-size: 16px;
+    }
+
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 14px 28px rgba(32,33,36,0.06);
+    }
+
+    figure img {
+      width: 100%;
+      display: block;
+      background: #fff;
+    }
+
+    figcaption {
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-radius: 8px;
+    }
+
+    .table-wrap table {
+      min-width: max-content;
+    }
+
+    th, td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th {
+      background: #e9f2ef;
+      color: var(--accent-dark);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .mini-table {
+      font-size: 13px;
+    }
+
+    .formula {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px 16px;
+      margin-top: 16px;
+    }
+
+    .formula .source {
+      margin-top: 10px;
+    }
+
+    .panel .formula {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .source {
+      display: inline-block;
+      margin-left: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: #eef7f4;
+      color: var(--accent-dark);
+      border-radius: 6px;
+      font-weight: 650;
+    }
+
+    .warning {
+      border-left-color: var(--warn);
+      background: #fff7e8;
+      color: #6c3e00;
+    }
+
+    .negative { color: var(--bad); font-weight: 760; }
+    .positive { color: var(--accent-dark); font-weight: 760; }
+
+    .figure-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .figure-grid figure img {
+      aspect-ratio: 1.55 / 1;
+      object-fit: contain;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #eef1f0;
+      color: #303633;
+      font-size: 0.92em;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .two, .three, .four, .metric-row, .pipeline, .figure-grid {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        min-height: auto;
+        padding: 56px 18px;
+      }
+
+      .topbar {
+        position: relative;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px 18px;
+      }
+
+      nav { justify-content: flex-start; }
+      th, td { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">ORIE 5370 Progress Brief</div>
+    <nav>
+      <a href="#snapshot">Snapshot</a>
+      <a href="#data">Data</a>
+      <a href="#regime">Regime</a>
+      <a href="#model">Model</a>
+      <a href="#framework">Framework</a>
+      <a href="#baselines">Baselines</a>
+      <a href="#v3">V3</a>
+      <a href="#v3-weights">Weights</a>
+      <a href="#results">Results</a>
+      <a href="#diagnostics">Diagnostics</a>
+      <a href="#status">Status</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="snapshot">
+      <div class="wrap">
+        <p class="eyebrow">Zoom progress report</p>
+        <h1>Regime-aware multi-period portfolio optimization solved with CVXPY.</h1>
+        <p class="lead">A rolling empirical study of U.S. sector ETF allocation that combines market regime estimation, convex model predictive trading, realistic transaction costs, and benchmark-driven diagnostics.</p>
+        <div class="pill-row">
+          <span class="pill">Optimization model</span>
+          <span class="pill">Multi-period trading</span>
+          <span class="pill">Market regime</span>
+          <span class="pill">CVXPY convex program</span>
+        </div>
+        <div class="pipeline">
+          <div class="step">Clean sector ETF data</div>
+          <div class="step">Estimate regime probabilities</div>
+          <div class="step">Build return and risk inputs</div>
+          <div class="step">Solve MPC with CVXPY</div>
+          <div class="step">Backtest against baselines</div>
+          <div class="step">Diagnose and improve V3</div>
+        </div>
+        <div class="metric-row">
+          
+    <div class="metric">
+      <span>Asset universe</span>
+      <strong>9</strong>
+      <small>Select Sector SPDR ETFs</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>Backtest period</span>
+      <strong>2013-01-08<br>to 2024-12-31</strong>
+      <small>from V3 manifest</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>V3 annual return</span>
+      <strong>14.40%</strong>
+      <small>full sample</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>V3 Sharpe</span>
+      <strong>0.876</strong>
+      <small>net of trading costs</small>
+    </div>
+    
+        </div>
+        <p class="small mt-24">All empirical numbers in this report are generated from the local project CSV/JSON artifacts listed in the final source section.</p>
+      </div>
+    </section>
+
+    <section id="question">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Research question</p>
+          <h2>Can regime information improve a realistic convex trading strategy?</h2>
+          <p class="lead">The project tests whether a regime-aware multi-period optimizer can outperform both a simple investable benchmark and a classical mean-variance optimizer under rolling, no-look-ahead conditions.</p>
+        </div>
+        <div class="panel">
+          <h3>Meeting-level takeaways</h3>
+          <ul class="short-list">
+            <li>The initial HMM-MPC model was theoretically aligned with the project, but it underperformed equal weight.</li>
+            <li>The diagnosis pointed to weak rolling-mean return forecasts and excessive defensive tilts.</li>
+            <li>V3 keeps the convex MPC structure, but improves the return input and selects parameters through a rolling benchmark-aware rule.</li>
+            <li>V3 finishes above all baselines in annual return and Sharpe in the full sample.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="data">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Data</p>
+          <h2>Moderate, liquid, and reproducible asset universe.</h2>
+          <p class="lead">The empirical universe is the nine long-history Select Sector SPDR ETFs: <code>XLB</code>, <code>XLE</code>, <code>XLF</code>, <code>XLI</code>, <code>XLK</code>, <code>XLP</code>, <code>XLU</code>, <code>XLV</code>, and <code>XLY</code>.</p>
+          <ul class="short-list">
+            <li>Daily adjusted prices, close prices, and volume come from the project Yahoo Finance data pipeline.</li>
+            <li>Regime features also use FRED <code>VIXCLS</code> and <code>BAMLH0A0HYM2</code>.</li>
+            <li>The ETF universe reduces survivorship issues, keeps covariance estimation stable, and remains directly tradable.</li>
+          </ul>
+          <div class="panel mt-24">
+            <div class="table-wrap"><table class="mini-table"><thead><tr><th>Check</th><th>Value</th></tr></thead><tbody><tr><td>Asset count</td><td>9</td></tr><tr><td>Raw price start</td><td>2010-01-04</td></tr><tr><td>Raw price end</td><td>2024-12-31</td></tr><tr><td>Clean return start</td><td>2010-01-05</td></tr><tr><td>Clean return end</td><td>2024-12-31</td></tr><tr><td>Return observations</td><td>3,773</td></tr><tr><td>Macro missing after alignment</td><td>0</td></tr><tr><td>Rolling covariance condition number, median</td><td>54.78</td></tr><tr><td>Rolling covariance condition number, max</td><td>106.06</td></tr></tbody></table></div>
+            <span class="source">Source: docs/04_empirical_section/tables/tab_01_data_quality.csv</span>
+          </div>
+        </div>
+        
+    <figure>
+      <img src="../outputs/figures/asset_cumulative_returns.png" alt="Asset cumulative returns" loading="lazy">
+      <figcaption>Sector ETF cumulative returns used to understand cross-sectional return dispersion. <span class="source">Source: outputs/figures/asset_cumulative_returns.png</span></figcaption>
+    </figure>
+    
+      </div>
+    </section>
+
+    <section id="regime">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Market regime</p>
+          <h2>HMM probabilities enter the optimizer, not a separate trading rule.</h2>
+          <p class="lead">The regime layer estimates latent market states from daily features and passes filtered probabilities into return, covariance, and trading-cost inputs.</p>
+          <ul class="short-list">
+            <li>Features are built with rolling, past-information-only transformations.</li>
+            <li>Regimes are interpreted as calm, transition, and stress states.</li>
+            <li>Stress probabilities shrink alpha and can increase risk or cost inputs.</li>
+          </ul>
+          <div class="formula">
+            $$q_{t+1} = \Pr(z_{t+1} \mid \mathcal{F}_t)$$
+            <span class="source">Source: docs/03_market_regime_design.md</span>
+          </div>
+        </div>
+        
+    <figure>
+      <img src="../outputs/figures/hmm_regime_probabilities.png" alt="HMM regime probabilities" loading="lazy">
+      <figcaption>Filtered HMM regime probabilities over the empirical sample. <span class="source">Source: outputs/figures/hmm_regime_probabilities.png</span></figcaption>
+    </figure>
+    
+      </div>
+    </section>
+
+    <section id="model">
+      <div class="wrap">
+        <p class="eyebrow">Optimization model</p>
+        <h2>Finite-horizon convex MPC, execute the first trade only.</h2>
+        <div class="grid two mt-32">
+          <div class="formula">
+            $$
+\max_{\{x_h,b_h,s_h\}_{h=1}^{H}}
+\sum_{h=1}^{H}
+\left[
+\hat{\mu}_t^\top x_h
+-\frac{\gamma}{2}x_h^\top\hat{\Sigma}_t x_h
+-a_t\mathbf{1}^\top(b_h+s_h)
+-\frac{\kappa}{2}\|b_h-s_h\|_2^2
+\right]
+$$
+            <span class="source">Source: docs/04_empirical_section.md, Section 5.4</span>
+          </div>
+          <div>
+            <div class="formula">
+              $$
+\mathbf{1}^\top x_h=1,\quad
+0 \le x_h \le 0.60,\quad
+x_h-x_{h-1}=b_h-s_h,\quad
+\frac{1}{2}\mathbf{1}^\top(b_h+s_h)\le \bar{\tau}
+$$
+              <span class="source">Source: docs/04_empirical_section.md, Section 5.4</span>
+            </div>
+            <ul class="short-list">
+              <li>Long-only and fully invested sector weights.</li>
+              <li>Single-asset cap is 60% in the final empirical model.</li>
+              <li>Transaction costs are included directly in the objective.</li>
+              <li>Problems are solved through CVXPY with OSQP as the first solver.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="framework">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Training and backtest framework</p>
+          <h2>No future information is used at the decision date.</h2>
+          <p class="lead">At each weekly rebalance, the strategy estimates inputs using information available no later than date <code>t</code>, solves the convex program, and applies the first trade on the next trading day.</p>
+          <div class="metric-row">
+            
+    <div class="metric">
+      <span>V3 rebalances</span>
+      <strong>626</strong>
+      <small>rows in selected_params_over_time.csv</small>
+    </div>
+    
+            
+    <div class="metric">
+      <span>Candidate rebalances</span>
+      <strong>7,512</strong>
+      <small>rows in candidate_rebalance_records.csv</small>
+    </div>
+    
+            
+    <div class="metric">
+      <span>Candidate count</span>
+      <strong>12</strong>
+      <small>from manifest.json</small>
+    </div>
+    
+            
+    <div class="metric">
+      <span>Selection window</span>
+      <strong>756 days</strong>
+      <small>from manifest.json</small>
+    </div>
+    
+          </div>
+          <div class="note mt-24">This structure matches the real investment chronology: estimate, choose, trade, then observe realized performance.</div>
+        </div>
+        <div class="panel">
+          <h3>Leakage controls from the V3 manifest</h3>
+          <ul class="short-list">
+            <li>Candidate returns are generated sequentially.</li><li>Selection at each rebalance uses candidate returns through the previous trading day.</li><li>Portfolio optimization uses returns through the decision date and trades on the next trading day.</li>
+          </ul>
+          <span class="source">Source: improvements/06_v3_rolling_regime_mpc/results/manifest.json</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="baselines">
+      <div class="wrap">
+        <p class="eyebrow">Baselines and initial model</p>
+        <h2>The first HMM-MPC was useful, but not enough.</h2>
+        <p class="lead">Equal weight is the simple investable benchmark. Markowitz CVXPY is the classical optimization benchmark. The original HMM-MPC satisfies the regime-aware multi-period convex optimization requirement, but it does not beat equal weight.</p>
+        <div class="panel mt-32">
+          <div class="table-wrap"><table><thead><tr><th>Strategy</th><th>Ann. Return</th><th>Sharpe</th><th>Max Drawdown</th><th>Final Wealth</th><th>Rebalance Turnover</th></tr></thead><tbody><tr><td>Equal Weight</td><td>12.65%</td><td>0.779</td><td>-36.98%</td><td>4.159</td><td>0.58%</td></tr><tr><td>Markowitz</td><td>9.87%</td><td>0.679</td><td>-32.51%</td><td>3.086</td><td>4.06%</td></tr><tr><td>Original HMM-MPC</td><td>10.70%</td><td>0.714</td><td>-32.65%</td><td>3.374</td><td>1.82%</td></tr></tbody></table></div>
+          <span class="source">Source: docs/04_empirical_section/tables/tab_03_original_strategy_performance.csv</span>
+        </div>
+        <div class="note warning">Interpretation for the meeting: the initial model improved over Markowitz in return and Sharpe, but lagged equal weight because its return forecasts were too weak and its allocation became too defensive.</div>
+      </div>
+    </section>
+
+    <section id="diagnosis">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Diagnosis</p>
+          <h2>The problem was the input design, not the convex program itself.</h2>
+          <ul class="short-list">
+            <li>Rolling sample means had low cross-sectional forecasting power.</li>
+            <li>Small expected-return errors created large portfolio tilts.</li>
+            <li>The initial HMM-MPC concentrated in defensive sectors and missed several growth-led or cyclical rallies.</li>
+            <li>A fixed parameter choice can lock in a market style from one historical period.</li>
+          </ul>
+          <div class="panel mt-24">
+            <div class="table-wrap"><table class="mini-table"><thead><tr><th>Window</th><th>Horizon</th><th>Mean IC</th><th>Median IC</th><th>Sign Hit Rate</th><th>Top-Bottom Realized</th></tr></thead><tbody><tr><td>252</td><td>1</td><td>0.013</td><td>0.033</td><td>52.38%</td><td>9.71%</td></tr><tr><td>252</td><td>21</td><td>0.003</td><td>0.017</td><td>56.79%</td><td>8.37%</td></tr><tr><td>504</td><td>1</td><td>0.018</td><td>0.033</td><td>52.89%</td><td>3.22%</td></tr><tr><td>504</td><td>21</td><td>0.002</td><td>0.000</td><td>59.40%</td><td>4.90%</td></tr></tbody></table></div>
+            <span class="source">Source: docs/04_empirical_section/tables/tab_10_forecast_diagnostics.csv</span>
+          </div>
+        </div>
+        
+    <figure>
+      <img src="../outputs/figures/hmm_mpc_weights.png" alt="Original HMM-MPC weights" loading="lazy">
+      <figcaption>Initial model weights, showing the defensive allocation pattern that motivated the improvement stage. <span class="source">Source: outputs/figures/hmm_mpc_weights.png</span></figcaption>
+    </figure>
+    
+      </div>
+    </section>
+
+    <section id="v3">
+      <div class="wrap">
+        <p class="eyebrow">Final model</p>
+        <h2>V3 rolling regime-MPC keeps the optimization structure and improves the inputs.</h2>
+        <div class="grid three mt-32">
+          <div class="panel">
+            <h3>Momentum return input</h3>
+            <div class="formula">$$ 
+m_{i,t} =
+\frac{1}{231}
+\sum_{j=22}^{252}\log(1+r_{i,t-j})
+ $$</div>
+            <p class="small">12-1 style sector momentum replaces noisy raw rolling means.</p>
+          </div>
+          <div class="panel">
+            <h3>Regime-dependent alpha</h3>
+            <div class="formula">$$ 
+\alpha_t =
+\operatorname{clip}\left(
+\alpha_0
+\left[
+1 - 0.20q_t^{\text{tr}} - 0.65q_t^{\text{st}}
+\right],
+0.10,
+\alpha_0
+\right)
+ $$</div>
+            <p class="small">Calm regimes retain more alpha; stress regimes shrink it.</p>
+          </div>
+          <div class="panel">
+            <h3>Rolling candidate selection</h3>
+            <div class="formula">$$ 
+\text{Score}_{k,t}=
+\text{Sharpe}_{k,t}
++0.40\,\text{IR}_{k,t}^{\text{EW}}
++2.00\,\text{ActiveReturn}_{k,t}^{\text{EW}}
++0.15\,\text{DDImprove}_{k,t}^{\text{EW}}
+ $$</div>
+            <p class="small">The score rewards total performance and performance relative to equal weight.</p>
+          </div>
+        </div>
+        <div class="panel mt-24">
+          <div class="table-wrap"><table class="mini-table"><thead><tr><th>Candidate</th><th>Gamma</th><th>Base Alpha</th><th>Turnover Cap</th><th>Selections</th></tr></thead><tbody><tr><td>g5_a100_cap25_s1</td><td>5.00</td><td>1.00</td><td>25%</td><td>183</td></tr><tr><td>g8_a100_cap25_s1</td><td>8.00</td><td>1.00</td><td>25%</td><td>104</td></tr><tr><td>g5_a025_cap10_s1</td><td>5.00</td><td>0.25</td><td>10%</td><td>98</td></tr><tr><td>g5_a025_cap25_s1</td><td>5.00</td><td>0.25</td><td>25%</td><td>81</td></tr><tr><td>g8_a025_cap25_s1</td><td>8.00</td><td>0.25</td><td>25%</td><td>74</td></tr><tr><td>g5_a075_cap10_s1</td><td>5.00</td><td>0.75</td><td>10%</td><td>40</td></tr></tbody></table></div>
+          <span class="source">Source: docs/04_empirical_section/tables/tab_07_v3_selection_summary.csv</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="v3-weights">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">V3 weight dynamics</p>
+          <h2>The final model changes sector exposure through time.</h2>
+          <p class="lead">This figure shows the monthly V3 sector weights generated by the rolling regime-MPC experiment.</p>
+          <ul class="short-list">
+            <li>The weights are produced by the V3 optimization run, not manually reconstructed.</li>
+            <li>The plot helps explain how the strategy moves across sector exposures rather than only reporting final performance.</li>
+            <li>It complements the regime average-weight diagnostics shown later in the report.</li>
+          </ul>
+        </div>
+        
+    <figure>
+      <img src="../improvements/06_v3_rolling_regime_mpc/results/figures/v3_monthly_weights.png" alt="V3 monthly weights" loading="lazy">
+      <figcaption>Monthly sector weights from the V3 rolling regime-MPC experiment. <span class="source">Source: improvements/06_v3_rolling_regime_mpc/results/figures/v3_monthly_weights.png</span></figcaption>
+    </figure>
+    
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="wrap">
+        <p class="eyebrow">Main results</p>
+        <h2>V3 improves return and Sharpe relative to all three references.</h2>
+        <div class="metric-row">
+          
+    <div class="metric">
+      <span>V3 final wealth</span>
+      <strong>5.001</strong>
+      <small>Equal weight: 4.159</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>V3 annual return</span>
+      <strong>14.40%</strong>
+      <small>Original HMM-MPC: 10.70%</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>Return diff. vs EW</span>
+      <strong>1.75 pp</strong>
+      <small>annualized</small>
+    </div>
+    
+          
+    <div class="metric">
+      <span>Return diff. vs HMM</span>
+      <strong>3.70 pp</strong>
+      <small>annualized</small>
+    </div>
+    
+        </div>
+        <div class="grid two mt-32">
+          
+    <figure>
+      <img src="04_empirical_section/figures/fig_01_cumulative_wealth.png" alt="Cumulative wealth" loading="lazy">
+      <figcaption>Full-sample cumulative wealth for V3 and reference strategies. <span class="source">Source: docs/04_empirical_section/figures/fig_01_cumulative_wealth.png</span></figcaption>
+    </figure>
+    
+          <div class="panel">
+            <div class="table-wrap"><table><thead><tr><th>Strategy</th><th>Ann. Return</th><th>Ann. Vol.</th><th>Sharpe</th><th>Max Drawdown</th><th>Final Wealth</th><th>Rebalance Turnover</th><th>Total Cost</th></tr></thead><tbody><tr><td>Equal Weight</td><td>12.65%</td><td>16.24%</td><td>0.779</td><td>-36.98%</td><td>4.159</td><td>0.58%</td><td>0.36%</td></tr><tr><td>Markowitz CVXPY</td><td>9.87%</td><td>14.54%</td><td>0.679</td><td>-32.51%</td><td>3.086</td><td>4.06%</td><td>2.54%</td></tr><tr><td>Original HMM-MPC</td><td>10.70%</td><td>14.98%</td><td>0.714</td><td>-32.65%</td><td>3.374</td><td>1.82%</td><td>1.74%</td></tr><tr><td>V3 Rolling Regime-MPC</td><td>14.40%</td><td>16.43%</td><td>0.876</td><td>-33.45%</td><td>5.001</td><td>1.36%</td><td>1.04%</td></tr></tbody></table></div>
+            <span class="source">Source: docs/04_empirical_section/tables/tab_04_v3_full_sample_performance.csv</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="excess">
+      <div class="wrap grid two">
+        <div>
+          <p class="eyebrow">Excess performance</p>
+          <h2>The improvement is visible against every reference strategy.</h2>
+          <div class="panel mt-24">
+            <div class="table-wrap"><table><thead><tr><th>Comparison</th><th>Active Return</th><th>IR</th><th>Return Diff.</th><th>Sharpe Diff.</th><th>Final Wealth Ratio</th></tr></thead><tbody><tr><td>V3 minus Equal Weight</td><td>1.57%</td><td>0.226</td><td>1.75%</td><td>0.097</td><td>1.203x</td></tr><tr><td>V3 minus Markowitz</td><td>4.33%</td><td>0.603</td><td>4.52%</td><td>0.197</td><td>1.621x</td></tr><tr><td>V3 minus Original HMM-MPC</td><td>3.52%</td><td>0.515</td><td>3.70%</td><td>0.162</td><td>1.482x</td></tr></tbody></table></div>
+            <span class="source">Source: docs/04_empirical_section/tables/tab_05_v3_excess_performance.csv</span>
+          </div>
+          <div class="note">Against equal weight, V3 improves final wealth by a factor of 1.203x and has a higher Sharpe ratio by 0.097.</div>
+        </div>
+        
+    <figure>
+      <img src="04_empirical_section/figures/fig_03_v3_excess_cumulative_pnl.png" alt="V3 excess cumulative PnL" loading="lazy">
+      <figcaption>Cumulative V3 PnL relative to the reference strategies. <span class="source">Source: docs/04_empirical_section/figures/fig_03_v3_excess_cumulative_pnl.png</span></figcaption>
+    </figure>
+    
+      </div>
+    </section>
+
+    <section id="diagnostics">
+      <div class="wrap">
+        <p class="eyebrow">Diagnostics</p>
+        <h2>Result checks for yearly performance, drawdown, selection, and regimes.</h2>
+        <div class="figure-grid mt-32">
+          
+    <figure>
+      <img src="04_empirical_section/figures/fig_02_drawdowns.png" alt="Drawdowns" loading="lazy">
+      <figcaption>Drawdown paths for V3 and baselines. <span class="source">Source: docs/04_empirical_section/figures/fig_02_drawdowns.png</span></figcaption>
+    </figure>
+    
+          
+    <figure>
+      <img src="04_empirical_section/figures/fig_04_yearly_active_return.png" alt="Yearly active return" loading="lazy">
+      <figcaption>Annual active return of V3 against reference strategies. <span class="source">Source: docs/04_empirical_section/figures/fig_04_yearly_active_return.png</span></figcaption>
+    </figure>
+    
+          
+    <figure>
+      <img src="04_empirical_section/figures/fig_05_selected_parameters_over_time.png" alt="Selected parameters" loading="lazy">
+      <figcaption>Rolling parameter choices selected by V3 over time. <span class="source">Source: docs/04_empirical_section/figures/fig_05_selected_parameters_over_time.png</span></figcaption>
+    </figure>
+    
+          
+    <figure>
+      <img src="04_empirical_section/figures/fig_06_average_weights_by_regime.png" alt="Average weights by regime" loading="lazy">
+      <figcaption>Average V3 allocations conditional on inferred market regime. <span class="source">Source: docs/04_empirical_section/figures/fig_06_average_weights_by_regime.png</span></figcaption>
+    </figure>
+    
+        </div>
+        <div class="panel mt-24">
+          <div class="table-wrap"><table class="mini-table"><thead><tr><th>Regime</th><th>Largest Average Weights</th></tr></thead><tbody><tr><td>Calm</td><td>XLY 21.8%, XLV 21.6%, XLK 16.9%</td></tr><tr><td>Stress</td><td>XLY 27.5%, XLV 25.1%, XLK 19.0%</td></tr><tr><td>Transition</td><td>XLV 20.8%, XLU 18.3%, XLY 18.3%</td></tr></tbody></table></div>
+          <span class="source">Source: docs/04_empirical_section/tables/tab_08_v3_average_weights_by_regime.csv</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="status">
+      <!-- <div class="wrap grid two"> -->
+        <!-- <div>
+          <p class="eyebrow">Current status</p>
+          <h2>The project is ready for a progress meeting.</h2>
+          <ul class="short-list">
+            <li>Literature review, theoretical model, and regime design are drafted.</li>
+            <li>Data acquisition, cleaning, quality checks, and visualization are complete.</li>
+            <li>Equal weight and Markowitz CVXPY baselines are implemented.</li>
+            <li>The original HMM-MPC model has been implemented and diagnosed.</li>
+            <li>V3 rolling regime-MPC is implemented with reproducible tables and figures.</li>
+          </ul>
+          <div class="note">Suggested discussion focus: robustness to transaction costs, alternative regime specifications, and how much of V3's performance is linked to sector momentum persistence.</div>
+        </div> -->
+        <div class="panel">
+          <h3>Traceability checklist</h3>
+          <ul class="short-list">
+            <li>Performance values come from CSV outputs.</li>
+            <li>V3 design settings come from the V3 manifest and experiment outputs.</li>
+            <li>Mathematical formulas match the project empirical/theoretical documents.</li>
+            <li>Figures are linked from existing project output directories.</li>
+          </ul>
+          <h3 class="mt-24">Empirical source files</h3>
+          <ul class="short-list small">
+            <li><code>docs/04_empirical_section/tables/tab_01_data_quality.csv</code></li><li><code>docs/04_empirical_section/tables/tab_03_original_strategy_performance.csv</code></li><li><code>docs/04_empirical_section/tables/tab_04_v3_full_sample_performance.csv</code></li><li><code>docs/04_empirical_section/tables/tab_05_v3_excess_performance.csv</code></li><li><code>docs/04_empirical_section/tables/tab_07_v3_selection_summary.csv</code></li><li><code>docs/04_empirical_section/tables/tab_08_v3_average_weights_by_regime.csv</code></li><li><code>docs/04_empirical_section/tables/tab_10_forecast_diagnostics.csv</code></li><li><code>improvements/06_v3_rolling_regime_mpc/results/manifest.json</code></li><li><code>improvements/06_v3_rolling_regime_mpc/results/figures/v3_monthly_weights.png</code></li><li><code>improvements/06_v3_rolling_regime_mpc/results/tables/candidate_rebalance_records.csv</code></li><li><code>improvements/06_v3_rolling_regime_mpc/results/tables/selected_params_over_time.csv</code></li>
+          </ul>
+        </div>
+      <!-- </div> -->
+    </section>
+  </main>
+</body>
+</html>

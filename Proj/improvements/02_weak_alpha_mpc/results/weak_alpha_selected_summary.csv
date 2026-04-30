@@ -1,0 +1,9 @@
+selected_alpha_shrink,0.25
+gamma,4.0
+lookback_mu,63.0
+lookback_cov,252.0
+base_trade_cost,0.0005
+selected_sharpe,0.8107514423665447
+selected_annualized_return,0.1259992881993428
+selected_max_drawdown,-0.34527578065480613
+selected_total_cost,0.00048518172806459505

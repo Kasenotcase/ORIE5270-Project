@@ -1,0 +1,2 @@
+ann_return,ann_vol,sharpe,max_drawdown,final_wealth,avg_turnover,total_cost,gamma,turnover_cap,stress_multiplier,rebalance_count,failed_rebalance_count,avg_stress_probability
+0.14179621556392297,0.18416727884081785,0.7699316428869123,-0.3246252214350476,2.211146361382232,0.017614137773858576,0.0034122705288732874,10.0,0.05,3.0,314,0,0.12166706859448125

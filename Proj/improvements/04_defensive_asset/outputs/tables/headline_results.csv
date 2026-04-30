@@ -1,0 +1,2 @@
+strategy,annualized_return,annualized_volatility,sharpe,max_drawdown,final_wealth
+HMM_MPC_SHY_weekly,0.060583495075905436,0.09983614428714989,0.6068292751937062,-0.2102709521847429,1.9917729907682653

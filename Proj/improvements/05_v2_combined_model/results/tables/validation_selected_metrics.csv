@@ -1,0 +1,2 @@
+strategy,start,end,observations,annualized_return,annualized_volatility,sharpe,max_drawdown,final_wealth,avg_daily_turnover,avg_rebalance_turnover,total_cost,gamma,alpha_shrink,turnover_cap,stress_multiplier
+V2_HMM_MPC,2013-01-08,2018-12-31,1506,0.11162863650749322,0.11636210426158466,0.9593212258911157,-0.15722157836150497,1.8821926670753386,0.0010101020392513924,0.004907140874556763,0.0018315027491819763,8.0,0.25,0.1,1.0

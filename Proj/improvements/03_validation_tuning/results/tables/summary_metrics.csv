@@ -1,0 +1,2 @@
+validation_period,test_period,selected_gamma,selected_turnover_cap,selected_stress_multiplier,validation_sharpe,test_sharpe,test_ann_return,test_ann_vol,test_max_drawdown,test_final_wealth,test_avg_turnover,test_total_cost
+2013-01-11 to 2018-12-31,2019-01-01 to 2024-12-31,10.0,0.05,3.0,0.8186192591873424,0.7699316428869123,0.14179621556392297,0.18416727884081785,-0.3246252214350476,2.211146361382232,0.017614137773858576,0.0034122705288732874

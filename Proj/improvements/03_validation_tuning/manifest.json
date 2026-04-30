@@ -1,0 +1,23 @@
+{
+  "selected_parameters": {
+    "gamma": 10.0,
+    "turnover_cap": 0.05,
+    "stress_multiplier": 3.0
+  },
+  "validation_period": [
+    "2013-01-11",
+    "2018-12-31"
+  ],
+  "test_period": [
+    "2019-01-01",
+    "2024-12-31"
+  ],
+  "outputs": [
+    "results/tables/validation_grid_results.csv",
+    "results/tables/selected_parameters.csv",
+    "results/tables/validation_selected_metrics.csv",
+    "results/tables/test_selected_metrics.csv",
+    "results/tables/reference_strategy_metrics_test.csv",
+    "results/tables/summary_metrics.csv"
+  ]
+}

@@ -1,0 +1,4 @@
+pair,avg_weight_distance,max_weight_distance,return_correlation
+EqualWeight_weekly vs Markowitz_CVXPY_weekly,0.5746529744103217,0.6733177723206758,0.9144864384992196
+EqualWeight_weekly vs HMM_MPC_CVXPY_weekly,0.5488881818168999,0.6793193431279034,0.9195377566860802
+HMM_MPC_CVXPY_weekly vs Markowitz_CVXPY_weekly,0.167984141279772,0.5650195065547899,0.9888865743810861
