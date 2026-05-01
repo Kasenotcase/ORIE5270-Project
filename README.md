@@ -79,6 +79,13 @@ The final analysis compares the proposed regime-aware approach against simpler a
 ## Main Results
 
 The project finds that the improved V3 rolling regime-MPC strategy produces a more stable and economically meaningful allocation process than the initial implementation. The V3 version is designed to address practical issues such as excessive turnover, unstable regime estimates, and sensitivity to noisy short-window return forecasts.
+
+The empirical results show that regime-aware optimization can improve portfolio behavior when it is combined with appropriate regularization, rolling estimation, and realistic trading constraints. The comparison with equal-weight and Markowitz baselines highlights both the benefits and limitations of using latent regime information in a convex optimization framework.
+
+For detailed results, see the documentation and output files under:
+
+```text
+Proj/docs/
 Proj/outputs/
 Proj/improvements/
 ```
@@ -90,10 +97,19 @@ The project scripts are organized around the pipeline in `Proj/scripts/` and `Pr
 A typical workflow is:
 
 ```bash
+cd Proj
+
+# Run baseline experiments and diagnostics
 python scripts/baseline_strategy.py
 
 # Run the improved rolling regime-MPC experiment
 python improvements/v3_rolling_regime_mpc.py
+```
+
+Depending on the local Python environment and data location, some script paths may need to be adjusted. The project was developed as a reproducible course project, so outputs are also included in the repository for reference.
+
+## Dependencies
+
 The main Python dependencies are:
 
 - `numpy`
@@ -134,15 +150,5 @@ The goal is not only to build a portfolio strategy, but also to demonstrate how 
 ## Notes
 
 This repository is intended for academic and educational use. The strategies and results are not financial advice. Backtest performance does not guarantee future investment performance.
-## Dependencies
 
-```
-
-Depending on the local Python environment and data location, some script paths may need to be adjusted. The project was developed as a reproducible course project, so outputs are also included in the repository for reference.
-cd Proj
-
-# Run baseline experiments and diagnostics
-
-```text
-Proj/docs/
 
