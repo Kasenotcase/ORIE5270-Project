@@ -1,90 +1,200 @@
-# 项目落地指南
-## 深入研究：融入状态依赖交易成本的多期MPC投资组合优化
+# Project Blueprint: Regime-Aware Multi-Period Portfolio Optimization
 
-### 0. 优秀PDF作业基准模型深度解构 (Baseline Deconstruction)
+This document describes the design blueprint for the ORIE5270 final project. The project builds a data-driven portfolio optimization pipeline that combines market regime detection, rolling estimation, and constrained convex optimization.
 
-在深入探讨我们选定的多期MPC模型之前，我们先准确提取您提供的优秀PDF作业的核心设定，作为后续优化的直接对比基准：
+The goal is to demonstrate how financial time-series data can be transformed into a reproducible decision-making system. The project is not only a portfolio backtest, but also an applied data analytics workflow involving data preparation, statistical learning, optimization modeling, and empirical evaluation.
 
-1. **数据集与截面资产**：作者使用了从Yahoo Finance获取的日频历史价格数据。截面资产选取了美国标普500（S&P 500）和欧洲富时350（FTSE 350）的成分股。通过筛选流动性最好且存活时间最长的股票，最终两个市场的资产截面数量均被固定为 **$N=200$** 。
-2. **市场状态（Market Regime）设定**：
-  - **状态数量**：作者测试了2到5个状态，通过计算“状态切换得分（Switching Score）”和风险收益指标，最终发现划分 **2至4个状态**（尤其是3个状态）时的策略表现最稳定 。
-  - **输入特征**：作者仅仅依赖日频量价数据，提取了4个由成交量加权的特征：成交量加权收益率（VW Returns）、成交量加权指数移动平均（VW EMA）、成交量加权MACD（VW MACD）以及成交量加权RSI（VW RSI） 。
-3. **状态融入优化模型的逻辑（与HMM理念的对比）**：
-  - **PDF的逻辑（硬切分）**：作者首先使用高斯混合模型（GMM）结合期望最大化（EM）算法对历史数据进行无监督聚类，给每天分配一个硬性的离散状态标签（例如状态0、1、2）。接着，将这些标签序列输入到 **ARIMA模型** 中，用于预测下一天的单一离散状态。一旦预测出未来处于状态 $i$，系统就会回溯历史，**仅提取**历史上属于状态 $i$ 的日子，并完全使用这些日子来计算样本期望收益率 $\mu_i$ 和协方差矩阵 $\Sigma_i$ 。
-  - **与我们HMM想法的差异**：PDF的做法是“聚类 + ARIMA离散预测 + 历史样本过滤计算”，这是一种典型的硬切分（Hard Assignment）机制，一旦ARIMA预测错误，整个协方差矩阵可能会发生剧烈跳跃。相比之下，我们在本项目中提倡的**隐马尔可夫模型（HMM）**是一种自带时序状态转移矩阵的生成式模型。HMM不仅能直接输出未来处于各个状态的概率分布，还能通过这些概率对历史参数进行平滑的软加权（Soft Blending），这更加契合多期MPC需要预测未来 $H$ 步演进路径的理论需求。
-4. **优化理论模型公式**：
-  PDF作者采用的是最经典的单期马科维茨（Markowitz）均值-方差模型，即标准的二次规划（QP）问题：
-  $$\max \mu^T w - \gamma w^T \Sigma w$$
-  受限于全额投资和非负（禁止做空）约束条件：
-  $$1^T w = 1, \quad w \geq 0$$
-  其中 $\gamma$ 为风险厌恶系数，作者通过在CVXPY中网格枚举不同的 $\gamma$ 值来寻找最大化夏普比率的解 。
+## 1. Project Motivation
 
-### 1. 文献综述 (Literature Review)
+Financial markets are not stationary. Expected returns, volatility, and cross-asset correlations can change substantially across different market environments. A static allocation rule may perform well in one period but become unstable or inefficient when the market regime changes.
 
-在这个细分领域，研究的演进主要沿着“优化框架的完善”和“状态识别的融入”两条主线展开：
+This project studies whether a regime-aware optimization framework can improve sector ETF allocation. Instead of using one fixed estimate of expected return and covariance, the strategy first estimates latent market regimes and then uses regime-conditioned information in a multi-period portfolio optimization problem.
 
-- **经典与基础框架：** Markowitz (1952) 的单期均值-方差模型奠定了基础，但忽略了调仓成本和时间维度的动态演变 。而 Hamilton (1989) 提出的马尔可夫机制转换模型（Markov Regime-Switching Model）则是量化金融界处理非平稳时间序列的经典基石。
-- **多期优化与MPC的引入：** Boyd 等人在 2017 年发表的经典论文《Multi-Period Trading via Convex Optimization》中，系统性地将模型预测控制（MPC）框架引入量化交易，证明了考虑未来多个交易期的预期收益、风险、交易成本，并将其转化为可通过 CVXPY 高效求解的凸优化问题，能显著提升策略的实盘表现 。
-- **状态切换与资产配置的结合：** Nystrup 等人 (2018) 在《Dynamic portfolio optimization across hidden market regimes》中，开创性地将隐马尔可夫模型（HMM）预测出的市场状态与 MPC 结合，证明了在预测到危机状态时提前调整配置，能带来更高的收益并显著降低最大回撤 。
-- **最新前沿探索 (2024-2025)：** 学术界的最新研究开始强调状态感知（Regime-aware）架构。例如，2025年提出的《RegimeFolio》框架，主张显式地利用 VIX 等波动率指标进行市场状态的硬性切分，从而使预测与均值-方差配置都能自适应当前的波动率状态。另一篇 2025 年的新作《Integrated Prediction and Multi-period Portfolio Optimization (IPMO)》则探索了将机器学习预测与带有换手率惩罚的多期凸优化层直接融合的端到端学习框架。
+The project is designed around the following research question:
 
-### 2. 理论模型设计 (Theoretical Model)
+> Can market regime information improve the stability and out-of-sample performance of a constrained portfolio optimization strategy?
 
-**核心任务：** 构建一个基于 MPC 的动态投资组合优化器。在每天收盘后，模型不仅计算明天的最优权重，还会“向前看” $H$ 个交易日。
+## 2. ORIE5270 Project Framing
 
-**优化目标：** 在规划视野 $H$ 内，最大化风险调整后的扣费收益。利用CVXPY，我们可以将其构建为一个标准的二次规划（QP）问题：
+This project was developed as an ORIE5270 applied analytics project. It emphasizes the full data-to-decision pipeline:
 
-$$\max \sum_{\tau=t}^{t+H-1} \left( \hat{\mu}_\tau^T (w_\tau + z_\tau) - \gamma_{risk} (w_\tau + z_\tau)^T \hat{\Sigma}_\tau (w_\tau + z_\tau) - \gamma_{trade} \phi_\tau(z_\tau) \right)$$
+1. collecting and organizing financial market data;
+2. cleaning and transforming price data into return data;
+3. estimating latent market states using statistical learning methods;
+4. building a constrained optimization model;
+5. running rolling out-of-sample experiments;
+6. comparing the proposed method against transparent baselines;
+7. documenting the methodology and empirical findings.
 
-**模型变量与约束解释：**
+The project connects naturally to ORIE5270 because it requires practical data processing, reproducible implementation, model validation, and careful communication of results.
 
-- $w_\tau$ 是第 $\tau$ 期的初始权重，$z_\tau$ 是计划交易的权重变化量 。
-- 基本约束条件：自融资约束 $1^T z_\tau = 0$（不额外追加资金），权重时间演进 $w_{\tau+1} = w_\tau + z_\tau$，以及非负约束 $w_\tau + z_\tau \geq 0$（仅做多） 。
-- $\hat{\mu}_\tau$ 和 $\hat{\Sigma}_\tau$ 是根据预测的“未来市场状态”所提取的期望收益和协方差矩阵 。
-- $\phi_\tau(z_\tau)$ 是交易成本惩罚函数，通常采用基于 $||z_\tau||_1$ 的绝对值惩罚（模拟固定费率与买卖价差）。模型的核心在于：**惩罚系数 $\gamma_{trade}$ 受市场状态控制**。在流动性枯竭的“危机状态”，$\gamma_{trade}$ 将被动态放大，以迫使优化器在市场环境恶劣时减少调仓动作。
+## 3. Portfolio Universe and Data
 
-### 3. 市场状态识别：经典与前沿日频指标 (Market Regime)
+The empirical study focuses on a universe of U.S. sector exchange-traded funds. Sector ETFs provide a useful testbed because they are liquid, economically interpretable, and exposed to different parts of the market.
 
-为了满足仅使用**日频数据**的要求，我们需要利用日频量价与宏观代理变量来捕捉不同状态的切换特征：
+The portfolio universe contains nine sector ETFs. Daily historical prices are converted into daily returns and aligned into a common time index. The empirical period covers data from 2010 to 2024, with out-of-sample evaluation beginning in 2013.
 
-**基础日频量价指标：**
+The data preparation stage includes:
 
-- 基于价格的动量与趋势：指数移动平均线（EMA）、MACD、RSI 等。
-- 波动率指标：基于日收益率的滚动历史波动率（如21天或63天窗口）以及最大回撤深度 。
+- loading and aligning ETF price data;
+- computing daily returns;
+- handling missing values;
+- separating training and testing windows;
+- preparing inputs for regime estimation and optimization.
 
-**前沿且适配日频的特色指标：**
+## 4. Baseline Strategies
 
-- **Amihud 非流动性指标 (Amihud Illiquidity Ratio)：** 计算公式为 $|r_t| / \text{Volume}_t$ （日绝对收益率除以日度美元交易额）。这是金融微观结构中最经典的日频流动性代理变量，数值越大代表流动性越差，能极好地刻画市场陷入恐慌或流动性枯竭的状态。
-- **VIX 波动率指数：** 引入 VIX 收盘价。VIX 本身就是反映标普 500 隐含波动率的极佳前瞻性日频信号，大量文献（如前述 RegimeFolio）直接将其作为切分市场状态的核心特征 。
-- **宏观信用利差 (Credit Spreads)：** 例如使用 ICE BofA US High Yield Index Option-Adjusted Spread (高收益债期权调整利差)。信用利差的走阔往往是股市发生系统性风险、步入危机状态的强同步日频指标 。
-- **日度订单不平衡代理 (Order Imbalance Proxy)：** 虽无日内数据，但可通过公式 $\frac{\text{Close} - \text{Low}}{\text{High} - \text{Low}}$ 等衍生计算买卖力量的日频平衡度，用于捕获短期流动性压力 。
+The project compares the proposed regime-aware strategy with standard benchmark strategies.
 
-**在模型中的具体运用：**
+### 4.1 Equal-Weight Portfolio
 
-每天收盘后，将上述日频特征向量输入隐马尔可夫模型（HMM）进行无监督学习，输出当前处于各状态（例如：高流动性牛市、低流动性熊市、震荡市）的概率。利用 HMM 的转移矩阵推算未来 $H$ 期的状态分布，据此将 $\hat{\mu}_\tau$、$\hat{\Sigma}_\tau$ 和惩罚系数 $\gamma_{trade}$ 替换为对应状态的历史统计量，最后交由 CVXPY 求解。
+The equal-weight portfolio assigns the same weight to each ETF. It is simple, transparent, and does not depend on estimated expected returns or covariance matrices.
 
-### 4. 现实数据获取与实证任务设计 (Concrete Data & Tasks)
+This benchmark is useful because many sophisticated portfolio strategies fail to outperform equal weighting after estimation error and transaction costs are considered.
 
-为了让该作业兼具足够的工作量与真实的数据说服力，建议按照以下设定开展项目实证：
+### 4.2 Mean-Variance / Markowitz Portfolio
 
-- **研究标的（资产池）：** 主实证采用 **9个长历史 Select Sector SPDR 行业ETF**：
-  $$\{\text{XLB}, \text{XLE}, \text{XLF}, \text{XLI}, \text{XLK}, \text{XLP}, \text{XLU}, \text{XLV}, \text{XLY}\}.$$
-  采用该资产池的原因是：它们流动性较好、公开数据容易获得、历史覆盖可延伸至2010年、截面维度较小（$N=9$），能够降低协方差矩阵病态、survivorship bias 处理负担和个股数据清洗复杂度。完整11个GICS行业ETF可作为较短样本稳健性检验，但不作为主实证口径，因为 XLC 和 XLRE 的历史较短，若强行纳入2010-2024窗口会引入额外缺失值处理和代理替代问题。
-- **数据选择原则（Garbage in, garbage out）：** 本项目优先选择干净、可复现、可解释的数据，而不是追求更大的资产截面。具体原则包括：
-  - 截面资产数保持适中，避免用数百只股票导致协方差估计不稳、计算耗时过高、survivorship bias 难以处理。
-  - 数据源必须公开、免费、可自动下载，便于复现实证结果。
-  - 所需特征必须能由日频 OHLCV、VIX 和信用利差稳定计算，避免依赖难以获得的日内订单簿或专有数据。
-  - 所有训练、特征和参数估计必须严格使用当期及过去信息，避免 look-ahead bias。
-  - 对缺失值、异常价格、成交量为零、宏观数据非交易日等问题必须先做数据诊断，再进入模型。
-- **数据源（完全公开免费）：**
-  - *量价数据：* 使用 Python 的 `yfinance` 库，拉取各 ETF 的日频开高低收及成交量（OHLCV），用于计算收益率、Amihud 指标等 。
-  - *宏观状态特征：* 使用 `pandas-datareader` 接入美联储 FRED 数据库，一键获取日频的 VIX 指数（代码：VIXCLS）和高收益债信用利差（代码：BAMLH0A0HYM2）。
-- **回测时间窗口：** 建议选取 **2010年1月至2024年12月**。该区间完美涵盖了完整的经济周期，包含极佳的“状态切换”测试样本：
-  - 2017-2019年的低波动缓慢牛市（常态时期）。
-  - 2020年3月的新冠疫情熔断（极高波动、流动性骤度枯竭的危机时期）。
-  - 2022年的高通胀与加息周期（持续下行的熊市时期）。
-- **对比基准设定 (Baselines)：**
-  - *Baseline 1:* 传统的等权重组合 (1/N Portfolio)。
-  - *Baseline 2:* 忽略市场状态与交易成本的单期 Markowitz 均值-方差模型。
-  - *Proposed Model:* 融入 HMM 状态识别与动态交易成本惩罚的多期 MPC 模型。
-  - 通过对比它们在 2020 年等极端时期内的换手率和最大回撤，您可以强有力地证明：当检测到高昂的流动性成本状态时，MPC 模型能够智能地降低换手、选择防御性行业，从而实现卓越的样本外风险调整后收益。
+The Markowitz baseline uses historical estimates of expected returns and covariance to solve a mean-variance optimization problem. This strategy provides a classical optimization benchmark.
+
+However, mean-variance optimization can be sensitive to noisy return estimates. This makes it an important comparison point for evaluating whether regime-aware inputs and stronger regularization improve portfolio behavior.
+
+### 4.3 Original HMM-MPC Strategy
+
+The original HMM-MPC implementation combines hidden Markov model regime detection with model predictive control style portfolio optimization. It serves as the first version of the proposed regime-aware framework.
+
+This version is useful for identifying practical issues such as unstable regime estimates, excessive turnover, and sensitivity to noisy short-window forecasts.
+
+### 4.4 V3 Rolling Regime-MPC Strategy
+
+The V3 strategy is the improved implementation. It uses rolling estimation, regime-conditioned inputs, stronger portfolio constraints, and transaction-cost-aware evaluation.
+
+The V3 version is intended to produce more stable allocations and more realistic out-of-sample performance.
+
+## 5. Market Regime Modeling
+
+The project uses a hidden Markov model to estimate latent market regimes from historical return data. Each regime represents a different market environment, such as a lower-volatility growth state, a higher-volatility stress state, or an intermediate transition state.
+
+The regime model is used to estimate:
+
+- the probability of the current market regime;
+- regime-dependent expected returns;
+- regime-dependent volatility and covariance behavior;
+- changes in allocation signals across market environments.
+
+The purpose of the regime model is not to perfectly label the market, but to provide a structured way to adapt the optimization inputs over time.
+
+## 6. Optimization Framework
+
+The core decision problem is a constrained portfolio optimization model. At each rebalance date, the strategy chooses portfolio weights across the ETF universe.
+
+The optimization problem is designed to balance several objectives:
+
+- expected return;
+- portfolio risk;
+- transaction costs;
+- turnover control;
+- diversification;
+- allocation stability.
+
+The main constraints include:
+
+- long-only portfolio weights;
+- full investment;
+- upper bounds on individual ETF weights;
+- turnover limits or turnover penalties;
+- sector diversification controls.
+
+The optimization layer is implemented using CVXPY, which allows the model to be expressed clearly as a convex optimization problem.
+
+## 7. Rolling Backtest Design
+
+The project evaluates the strategies using a rolling out-of-sample backtest. At each rebalance date, the model uses only information available up to that date.
+
+The rolling design is important because it helps avoid look-ahead bias. It also reflects a more realistic investment workflow:
+
+1. use historical data available at the rebalance date;
+2. estimate market regimes and model inputs;
+3. solve the portfolio optimization problem;
+4. hold the portfolio over the next evaluation period;
+5. record realized return, turnover, and transaction costs;
+6. move the window forward and repeat.
+
+This structure allows the project to evaluate whether the strategy performs well outside the data used for estimation.
+
+## 8. Evaluation Metrics
+
+The empirical analysis evaluates each strategy using both performance and implementation metrics.
+
+The main performance metrics are:
+
+- cumulative return;
+- annualized return;
+- annualized volatility;
+- Sharpe ratio;
+- maximum drawdown.
+
+The main implementation metrics are:
+
+- turnover;
+- transaction-cost-adjusted return;
+- allocation stability;
+- regime sensitivity;
+- interpretability of portfolio weights.
+
+This combination is important because a strategy with high raw return may be unattractive if it requires unrealistic trading or produces unstable allocations.
+
+## 9. Documentation Plan
+
+The written documentation is organized into several parts.
+
+### Literature Review
+
+The literature review discusses portfolio optimization, mean-variance analysis, regime switching models, hidden Markov models, and multi-period portfolio control.
+
+### Theoretical Model
+
+The theoretical model document presents the mathematical formulation of the regime-aware optimization problem, including objective terms and constraints.
+
+### Market Regime Design
+
+The market regime design document explains how latent regimes are estimated, interpreted, and incorporated into the optimization pipeline.
+
+### Empirical Section
+
+The empirical section reports the backtest setup, benchmark comparison, performance metrics, and interpretation of results.
+
+## 10. Implementation Plan
+
+The implementation is organized as a reproducible Python pipeline.
+
+The main stages are:
+
+1. prepare return data from sector ETF prices;
+2. implement benchmark strategies;
+3. estimate market regimes;
+4. construct regime-conditioned optimization inputs;
+5. solve portfolio optimization problems with CVXPY;
+6. run rolling backtests;
+7. save performance tables and figures;
+8. summarize results in the project documentation.
+
+The repository separates scripts, outputs, documentation, and improved model versions so that each part of the project can be inspected independently.
+
+## 11. Expected Contribution
+
+The project contributes an applied framework for combining statistical regime detection with constrained portfolio optimization. Its main value is not a claim of guaranteed trading performance, but a reproducible demonstration of how big data technologies and optimization methods can be used together in financial decision-making.
+
+The project highlights several practical lessons:
+
+- portfolio optimization is sensitive to noisy inputs;
+- regime information can be useful when combined with regularization;
+- transaction costs and turnover control are essential for realistic evaluation;
+- rolling out-of-sample testing is necessary for credible empirical analysis;
+- transparent baselines are important for interpreting model performance.
+
+## 12. Final Project Positioning
+
+This blueprint frames the project as an ORIE5270 final project from the beginning: a data-driven, reproducible, and empirically evaluated analytics pipeline for financial portfolio optimization.
+
+The final deliverable combines code, data processing, statistical modeling, convex optimization, backtesting, and written analysis. The project is therefore best understood as an applied big-data decision system rather than a purely theoretical portfolio model.
+
