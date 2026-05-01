@@ -26,8 +26,12 @@ The final implementation emphasizes realistic portfolio constraints, including l
 ```text
 .
 ├── README.md
+├── pyproject.toml
+├── docs/
+├── src/
+│   └── regime_mpc/
+├── tests/
 └── Proj/
-    ├── AGENTS.md
     ├── Blueprint.md
     ├── data/
     ├── docs/
@@ -38,7 +42,13 @@ The final implementation emphasizes realistic portfolio constraints, including l
 
 ### Key directories
 
-`Proj/data/` contains the historical market data used by the empirical pipeline.
+`src/regime_mpc/` contains the reusable Python package implementation for the regime-aware portfolio optimization pipeline.
+
+`tests/` contains unit tests and implementation checks for the project code.
+
+`docs/` contains general project documentation.
+
+`Proj/` contains the ORIE5270 course project workspace, including data, scripts, empirical outputs, and written analysis.
 
 `Proj/scripts/` contains data processing, baseline strategy, diagnostic, and testing scripts.
 
@@ -150,5 +160,3 @@ The goal is not only to build a portfolio strategy, but also to demonstrate how 
 ## Notes
 
 This repository is intended for academic and educational use. The strategies and results are not financial advice. Backtest performance does not guarantee future investment performance.
-
-
