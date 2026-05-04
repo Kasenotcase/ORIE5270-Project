@@ -1,6 +1,6 @@
 # ORIE5270 Project: Regime-Aware Multi-Period Portfolio Optimization
 
-This repository contains the final project for **ORIE5270: Big Data Technologies**. The project studies how data-driven market regime detection can be integrated with convex portfolio optimization to improve sector ETF allocation over time.
+This repository contains the final project for **ORIE5270: Big Data Technologies**. The project studies how data-driven market regime detection can be integrated with convex portfolio optimization to improve sector ETF allocation over time. AI tools were used to assist with project completion, including code development, debugging, and documentation refinement.
 
 The central idea is to combine historical market data processing, hidden Markov model based regime estimation, convex optimization with turnover and risk controls, rolling-window backtesting, and empirical comparison against standard portfolio baselines.
 
